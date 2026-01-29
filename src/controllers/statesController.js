@@ -10,12 +10,12 @@ exports.createState = async (req, res) => {
         .json({ success: false, message: "key and value are required" });
     }
 
-    const existing = await State.findOne({ key });
-    if (existing) {
-      return res
-        .status(400)
-        .json({ success: false, message: "State key already exists" });
-    }
+    // const existing = await State.findOne({ key });
+    // if (existing) {
+    //   return res
+    //     .status(400)
+    //     .json({ success: false, message: "State key already exists" });
+    // }
 
     const state = await State.create({ key, value });
     res.json({ success: true, data: state });
