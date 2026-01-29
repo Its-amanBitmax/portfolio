@@ -2,10 +2,10 @@
 const express = require('express');
 const router = express.Router();
 const bannerController = require('../controllers/bannerController');
-const upload = require('../middleware/upload'); // existing middleware
+const { uploadBanner } = require('../middleware/upload');
 
 // CREATE Banner
-router.post('/create', upload.single('image'), bannerController.createBanner);
+router.post('/create', uploadBanner.single('image'), bannerController.createBanner);
 
 // GET ALL Banners
 router.get('/', bannerController.getAllBanners);
@@ -14,7 +14,7 @@ router.get('/', bannerController.getAllBanners);
 router.get('/:id', bannerController.getBannerById);
 
 // UPDATE Banner
-router.put('/:id', upload.single('image'), bannerController.updateBanner);
+router.put('/:id', uploadBanner.single('image'), bannerController.updateBanner);
 
 // DELETE Banner
 router.delete('/:id', bannerController.deleteBanner);

@@ -1,17 +1,13 @@
-// src/middleware/upload.js
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 
-// Storage configuration
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/'); // images uploads folder me save honge
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname)); // unique filename
+// Helper function to create directory if not exists
+const ensureDirectoryExists = (dirPath) => {
+  if (!fs.existsSync(dirPath)) {
+    fs.mkdirSync(dirPath, { recursive: true });
   }
-});
+};
 
 // File filter (sirf images)
 const fileFilter = (req, file, cb) => {
@@ -25,10 +21,61 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-const upload = multer({
-  storage: storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // max 5MB
+// Storage for About
+const storageAbout = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const dir = 'uploads/about/';
+    ensureDirectoryExists(dir);
+    cb(null, dir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+// Storage for Service
+const storageService = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const dir = 'uploads/service/';
+    ensureDirectoryExists(dir);
+    cb(null, dir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+// Storage for Banner
+const storageBanner = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const dir = 'uploads/banner/';
+    ensureDirectoryExists(dir);
+    cb(null, dir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const uploadAbout = multer({
+  storage: storageAbout,
+  limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: fileFilter,
 });
 
-module.exports = upload;
+const uploadService = multer({
+  storage: storageService,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: fileFilter,
+});
+
+const uploadBanner = multer({
+  storage: storageBanner,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: fileFilter,
+});
+
+module.exports = { uploadAbout, uploadService, uploadBanner };

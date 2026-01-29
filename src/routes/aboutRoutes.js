@@ -1,13 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const aboutController = require('../controllers/aboutController');
-const upload = require('../middleware/upload');
+const { uploadAbout } = require('../middleware/upload');
 
 // CREATE About (image ke saath)
-router.post('/create', upload.single('image'), aboutController.createAbout);
+router.post('/create', uploadAbout.single('image'), aboutController.createAbout);
 
 // UPDATE About (image ke saath)
-router.put('/:id', upload.single('image'), aboutController.updateAbout);
+router.put('/:id', uploadAbout.single('image'), aboutController.updateAbout);
 
 // GET ALL
 router.get('/', aboutController.getAllAbouts);
