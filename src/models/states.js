@@ -4,7 +4,7 @@ const stateSchema = new mongoose.Schema({
   key: {
     type: String,
     required: true,
-    unique: true,   // unique identifier
+    unique: true,   
     trim: true
   },
   value: {
