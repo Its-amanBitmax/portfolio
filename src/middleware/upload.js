@@ -99,4 +99,27 @@ const uploadSkills = multer({
   fileFilter: fileFilter,
 });
 
-module.exports = { uploadAbout, uploadService, uploadBanner, uploadSkills };
+
+
+// Storage for Projects
+const storageProjects = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const dir = "uploads/projects/";
+    ensureDirectoryExists(dir);
+    cb(null, dir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const uploadProjects = multer({
+  storage: storageProjects,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter,
+});
+
+
+
+module.exports = { uploadAbout, uploadService, uploadBanner, uploadSkills, uploadProjects };
