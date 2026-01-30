@@ -11,6 +11,7 @@ const testimonialRoutes = require("./routes/testimonialRoutes");
 const contactInfoRoutes = require("./routes/contactInfoRoutes");
 const contactRoutes = require("./routes/contactRoutes");
 const blogRoutes = require("./routes/blogRoutes");
+const commentRoutes = require("./routes/commentRoutes");
 const app = express();
 
 app.use(cors());
@@ -27,5 +28,6 @@ app.use("/api/testimonials", testimonialRoutes);
 app.use("/api/contactinfo", contactInfoRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/blogs", blogRoutes);
+app.use("/api/comments", commentRoutes);
 
 module.exports = app;
