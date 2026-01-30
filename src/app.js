@@ -8,6 +8,7 @@ const serviceRoutes = require('./routes/serviceRoutes');
 const skillRoutes = require("./routes/skillRoutes");
 const projectRoutes = require("./routes/projectRoutes");
 const testimonialRoutes = require("./routes/testimonialRoutes");
+const contactInfoRoutes = require("./routes/contactInfoRoutes");
 
 const app = express();
 
@@ -22,4 +23,5 @@ app.use('/api/service', serviceRoutes);
 app.use("/api/skills", skillRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/testimonials", testimonialRoutes);
+app.use("/api/contactinfo", contactInfoRoutes);
 module.exports = app;

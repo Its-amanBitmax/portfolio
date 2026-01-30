@@ -142,6 +142,26 @@ const uploadTestimonials = multer({
   fileFilter: fileFilter,
 });
 
+// Storage for ContactInfo
+const storageContactInfo = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const dir = "uploads/contactinfo/";
+    ensureDirectoryExists(dir);
+    cb(null, dir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueName =
+      Date.now() + "-" + Math.round(Math.random() * 1e9) +
+      path.extname(file.originalname);
+    cb(null, uniqueName);
+  },
+});
+
+const uploadContactInfo = multer({
+  storage: storageContactInfo,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter,
+});
 
 
-module.exports = { uploadAbout, uploadService, uploadBanner, uploadSkills, uploadProjects, uploadTestimonials };
+module.exports = { uploadAbout, uploadService, uploadBanner, uploadSkills, uploadProjects, uploadTestimonials, uploadContactInfo };
