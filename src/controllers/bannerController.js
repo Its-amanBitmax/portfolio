@@ -10,11 +10,15 @@ exports.createBanner = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Image is required' });
     }
 
-    const protocol = req.protocol;
-    const host = req.get('host');
-    const imageUrl = `${protocol}://${host}/${req.file.path.replace(/\\/g, '/')}`;
+    // Upload image to Cloudinary
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: "banners",
+    });
 
-    const banner = new Banner({ image: imageUrl });
+    // Remove local file after upload
+    fs.unlinkSync(req.file.path);
+
+    const banner = new Banner({ image: result.secure_url });
     const savedBanner = await banner.save();
 
     res.status(201).json({ success: true, data: savedBanner });
