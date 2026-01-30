@@ -1,4 +1,5 @@
 const Contact = require("../models/Contact");
+const { sendMail } = require("../config/mailer");
 
 // ➕ Create Contact
 exports.createContact = async (req, res) => {
@@ -14,6 +15,25 @@ exports.createContact = async (req, res) => {
 
     const contact = new Contact({ name, email, subject, message });
     await contact.save();
+
+    // Send email notification
+    try {
+      await sendMail({
+        to: process.env.MAIL_USER, // Send to yourself
+        subject: `New Contact Form Submission: ${subject}`,
+        html: `
+          <h2>New Contact Message</h2>
+          <p><strong>Name:</strong> ${name}</p>
+          <p><strong>Email:</strong> ${email}</p>
+          <p><strong>Subject:</strong> ${subject}</p>
+          <p><strong>Message:</strong></p>
+          <p>${message}</p>
+        `,
+      });
+    } catch (mailError) {
+      console.error("Email sending failed:", mailError);
+      // Don't fail the request if email fails
+    }
 
     res.status(201).json({
       success: true,
