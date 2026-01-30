@@ -121,5 +121,27 @@ const uploadProjects = multer({
 });
 
 
+const storageTestimonials = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const dir = "uploads/testimonials/";
+    ensureDirectoryExists(dir);
+    cb(null, dir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueName =
+      Date.now() + "-" + Math.round(Math.random() * 1e9) +
+      path.extname(file.originalname);
 
-module.exports = { uploadAbout, uploadService, uploadBanner, uploadSkills, uploadProjects };
+    cb(null, uniqueName);
+  },
+});
+
+const uploadTestimonials = multer({
+  storage: storageTestimonials,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: fileFilter,
+});
+
+
+
+module.exports = { uploadAbout, uploadService, uploadBanner, uploadSkills, uploadProjects, uploadTestimonials };
