@@ -26,6 +26,6 @@ router.get("/blog/:blogId", getCommentsByBlog);
 router.put("/:id", updateComment);
 
 // ❌ Delete Comment
-router.delete("/delete/:id", deleteComment);
+router.delete("/:id", deleteComment);
 
 module.exports = router;
