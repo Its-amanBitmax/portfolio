@@ -78,4 +78,25 @@ const uploadBanner = multer({
   fileFilter: fileFilter,
 });
 
-module.exports = { uploadAbout, uploadService, uploadBanner };
+
+
+// Storage for Skills
+const storageSkills = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const dir = 'uploads/skills/';
+    ensureDirectoryExists(dir);
+    cb(null, dir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const uploadSkills = multer({
+  storage: storageSkills,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: fileFilter,
+});
+
+module.exports = { uploadAbout, uploadService, uploadBanner, uploadSkills };
