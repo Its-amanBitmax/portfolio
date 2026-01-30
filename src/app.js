@@ -9,7 +9,8 @@ const skillRoutes = require("./routes/skillRoutes");
 const projectRoutes = require("./routes/projectRoutes");
 const testimonialRoutes = require("./routes/testimonialRoutes");
 const contactInfoRoutes = require("./routes/contactInfoRoutes");
-
+const contactRoutes = require("./routes/contactRoutes");
+const blogRoutes = require("./routes/blogRoutes");
 const app = express();
 
 app.use(cors());
@@ -24,4 +25,7 @@ app.use("/api/skills", skillRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/testimonials", testimonialRoutes);
 app.use("/api/contactinfo", contactInfoRoutes);
+app.use("/api/contact", contactRoutes);
+app.use("/api/blogs", blogRoutes);
+
 module.exports = app;
