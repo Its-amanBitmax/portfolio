@@ -1,4 +1,5 @@
 const Testimonial = require("../models/Testimonial");
+const cloudinary = require("../config/cloudinary");
 const fs = require("fs");
 const path = require("path");
 
@@ -19,16 +20,22 @@ exports.createTestimonial = async (req, res) => {
       });
     }
 
-    const imageUrl = getImageUrl(req, req.file.filename);
+    // Upload image to Cloudinary
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: "testimonials",
+    });
 
     const testimonial = new Testimonial({
       name,
       title,
       description,
-      image: imageUrl,
+      image: result.secure_url,
     });
 
     await testimonial.save();
+
+    // Remove local file after upload
+    fs.unlinkSync(req.file.path);
 
     res.status(201).json({
       success: true,
@@ -100,18 +107,21 @@ exports.updateTestimonial = async (req, res) => {
 
     // if new image uploaded
     if (req.file) {
-      const oldImageName = testimonial.image.split("/").pop();
-      const oldImagePath = path.join(
-        __dirname,
-        "../uploads/testimonials",
-        oldImageName
-      );
-
-      if (fs.existsSync(oldImagePath)) {
-        fs.unlinkSync(oldImagePath);
+      // Delete old image from Cloudinary if it exists
+      if (testimonial.image && testimonial.image.includes("cloudinary")) {
+        const publicId = testimonial.image.split("/").slice(-2).join("/").split(".")[0];
+        await cloudinary.uploader.destroy(publicId);
       }
 
-      testimonial.image = getImageUrl(req, req.file.filename);
+      // Upload new image to Cloudinary
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: "testimonials",
+      });
+
+      testimonial.image = result.secure_url;
+
+      // Remove local file after upload
+      fs.unlinkSync(req.file.path);
     }
 
     testimonial.name = name || testimonial.name;
@@ -145,15 +155,10 @@ exports.deleteTestimonial = async (req, res) => {
       });
     }
 
-    const imageName = testimonial.image.split("/").pop();
-    const imagePath = path.join(
-      __dirname,
-      "../uploads/testimonials",
-      imageName
-    );
-
-    if (fs.existsSync(imagePath)) {
-      fs.unlinkSync(imagePath);
+    // Delete image from Cloudinary if it exists
+    if (testimonial.image && testimonial.image.includes("cloudinary")) {
+      const publicId = testimonial.image.split("/").slice(-2).join("/").split(".")[0];
+      await cloudinary.uploader.destroy(publicId);
     }
 
     await testimonial.deleteOne();

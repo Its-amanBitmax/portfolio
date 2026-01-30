@@ -1,4 +1,5 @@
 const Project = require("../models/Project");
+const cloudinary = require("../config/cloudinary");
 const fs = require("fs");
 const path = require("path");
 
@@ -19,16 +20,22 @@ exports.createProject = async (req, res) => {
       });
     }
 
-    const imageUrl = getImageUrl(req, req.file.filename);
+    // Upload image to Cloudinary
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: "projects",
+    });
 
     const project = new Project({
       title,
       link,
       techstack: Array.isArray(techstack) ? techstack : techstack.split(","),
-      image: imageUrl,
+      image: result.secure_url,
     });
 
     await project.save();
+
+    // Remove local file after upload
+    fs.unlinkSync(req.file.path);
 
     res.status(201).json({
       success: true,
@@ -149,15 +156,10 @@ exports.deleteProject = async (req, res) => {
       });
     }
 
-    const imageName = project.image.split("/").pop();
-    const imagePath = path.join(
-      __dirname,
-      "../uploads/projects",
-      imageName
-    );
-
-    if (fs.existsSync(imagePath)) {
-      fs.unlinkSync(imagePath);
+    // Delete image from Cloudinary if it exists
+    if (project.image && project.image.includes("cloudinary")) {
+      const publicId = project.image.split("/").slice(-2).join("/").split(".")[0];
+      await cloudinary.uploader.destroy(publicId);
     }
 
     await project.deleteOne();

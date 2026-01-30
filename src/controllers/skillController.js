@@ -1,4 +1,5 @@
 const Skill = require("../models/Skill");
+const cloudinary = require("../config/cloudinary");
 const fs = require("fs");
 const path = require("path");
 
@@ -19,14 +20,20 @@ exports.createSkill = async (req, res) => {
       });
     }
 
-    const imageUrl = getImageUrl(req, req.file.filename);
+    // Upload image to Cloudinary
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: "skills",
+    });
 
     const skill = new Skill({
       title,
-      image: imageUrl, // save full path
+      image: result.secure_url,
     });
 
     await skill.save();
+
+    // Remove local file after upload
+    fs.unlinkSync(req.file.path);
 
     res.status(201).json({
       success: true,
@@ -97,20 +104,21 @@ exports.updateSkill = async (req, res) => {
 
     // If new image uploaded
     if (req.file) {
-      // extract old filename from full URL
-      const oldImageName = skill.image.split("/").pop();
-      const oldImagePath = path.join(
-        __dirname,
-        "../uploads/skills",
-        oldImageName
-      );
-
-      if (fs.existsSync(oldImagePath)) {
-        fs.unlinkSync(oldImagePath);
+      // Delete old image from Cloudinary if it exists
+      if (skill.image && skill.image.includes("cloudinary")) {
+        const publicId = skill.image.split("/").slice(-2).join("/").split(".")[0];
+        await cloudinary.uploader.destroy(publicId);
       }
 
-      const newImageUrl = getImageUrl(req, req.file.filename);
-      skill.image = newImageUrl;
+      // Upload new image to Cloudinary
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: "skills",
+      });
+
+      skill.image = result.secure_url;
+
+      // Remove local file after upload
+      fs.unlinkSync(req.file.path);
     }
 
     skill.title = title || skill.title;
@@ -142,16 +150,10 @@ exports.deleteSkill = async (req, res) => {
       });
     }
 
-    // extract filename from URL
-    const imageName = skill.image.split("/").pop();
-    const imagePath = path.join(
-      __dirname,
-      "../uploads/skills",
-      imageName
-    );
-
-    if (fs.existsSync(imagePath)) {
-      fs.unlinkSync(imagePath);
+    // Delete image from Cloudinary if it exists
+    if (skill.image && skill.image.includes("cloudinary")) {
+      const publicId = skill.image.split("/").slice(-2).join("/").split(".")[0];
+      await cloudinary.uploader.destroy(publicId);
     }
 
     await skill.deleteOne();

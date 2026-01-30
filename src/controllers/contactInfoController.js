@@ -1,4 +1,5 @@
 const ContactInfo = require("../models/ContactInfo");
+const cloudinary = require("../config/cloudinary");
 const fs = require("fs");
 const path = require("path");
 
@@ -19,22 +20,27 @@ exports.createContactInfo = async (req, res) => {
       });
     }
 
+    // Upload image to Cloudinary
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: "contactinfo",
+    });
+
     const contactInfo = new ContactInfo({
       title,
       description,
       link,
-      image: req.file.filename,
+      image: result.secure_url,
     });
 
     await contactInfo.save();
 
+    // Remove local file after upload
+    fs.unlinkSync(req.file.path);
+
     res.status(201).json({
       success: true,
       message: "ContactInfo created successfully",
-      data: {
-        ...contactInfo._doc,
-        image: getImageUrl(req, contactInfo.image),
-      },
+      data: contactInfo,
     });
   } catch (error) {
     res.status(500).json({
@@ -49,14 +55,9 @@ exports.getAllContactInfo = async (req, res) => {
   try {
     const infos = await ContactInfo.find().sort({ createdAt: -1 });
 
-    const data = infos.map((item) => ({
-      ...item._doc,
-      image: getImageUrl(req, item.image),
-    }));
-
     res.status(200).json({
       success: true,
-      data,
+      data: infos,
     });
   } catch (error) {
     res.status(500).json({
@@ -80,10 +81,7 @@ exports.getContactInfoById = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      data: {
-        ...info._doc,
-        image: getImageUrl(req, info.image),
-      },
+      data: info,
     });
   } catch (error) {
     res.status(500).json({
@@ -107,18 +105,21 @@ exports.updateContactInfo = async (req, res) => {
     }
 
     if (req.file) {
-      const oldImageName = info.image.split("/").pop();
-      const oldImagePath = path.join(
-        __dirname,
-        "../uploads/contactinfo",
-        oldImageName
-      );
-
-      if (fs.existsSync(oldImagePath)) {
-        fs.unlinkSync(oldImagePath);
+      // Delete old image from Cloudinary if it exists
+      if (info.image && info.image.includes("cloudinary")) {
+        const publicId = info.image.split("/").slice(-2).join("/").split(".")[0];
+        await cloudinary.uploader.destroy(publicId);
       }
 
-      info.image = req.file.filename;
+      // Upload new image to Cloudinary
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: "contactinfo",
+      });
+
+      info.image = result.secure_url;
+
+      // Remove local file after upload
+      fs.unlinkSync(req.file.path);
     }
 
     info.title = title || info.title;
@@ -130,10 +131,7 @@ exports.updateContactInfo = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "ContactInfo updated successfully",
-      data: {
-        ...info._doc,
-        image: getImageUrl(req, info.image),
-      },
+      data: info,
     });
   } catch (error) {
     res.status(500).json({
@@ -155,11 +153,10 @@ exports.deleteContactInfo = async (req, res) => {
       });
     }
 
-    const imageName = info.image.split("/").pop();
-    const imagePath = path.join(__dirname, "../uploads/contactinfo", imageName);
-
-    if (fs.existsSync(imagePath)) {
-      fs.unlinkSync(imagePath);
+    // Delete image from Cloudinary if it exists
+    if (info.image && info.image.includes("cloudinary")) {
+      const publicId = info.image.split("/").slice(-2).join("/").split(".")[0];
+      await cloudinary.uploader.destroy(publicId);
     }
 
     await info.deleteOne();

@@ -1,24 +1,33 @@
 const Service = require('../models/Service');
+const cloudinary = require("../config/cloudinary");
+const fs = require("fs");
 
 // CREATE Service
 exports.createService = async (req, res) => {
   try {
+    const { title, description } = req.body;
+
     if (!req.file) {
       return res.status(400).json({ success: false, message: 'Image is required' });
     }
 
-    const protocol = req.protocol;
-    const host = req.get('host');
-    const imageUrl = `${protocol}://${host}/${req.file.path.replace(/\\/g, '/')}`;
-
-    const service = new Service({
-      image: imageUrl,
-      title: req.body.title,
-      description: req.body.description
+    // Upload image to Cloudinary
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: "services",
     });
 
-    const savedService = await service.save();
-    res.status(201).json({ success: true, data: savedService });
+    const service = new Service({
+      image: result.secure_url,
+      title,
+      description
+    });
+
+    await service.save();
+
+    // Remove local file after upload
+    fs.unlinkSync(req.file.path);
+
+    res.status(201).json({ success: true, data: service });
 
   } catch (err) {
     res.status(400).json({ success: false, message: err.message });
@@ -51,28 +60,39 @@ exports.getServiceById = async (req, res) => {
 // UPDATE Service
 exports.updateService = async (req, res) => {
   try {
-    const updateData = {
-      title: req.body.title,
-      description: req.body.description
-    };
+    const { title, description } = req.body;
 
-    if (req.file) {
-      const protocol = req.protocol;
-      const host = req.get('host');
-      updateData.image = `${protocol}://${host}/${req.file.path.replace(/\\/g, '/')}`;
-    }
+    const service = await Service.findById(req.params.id);
 
-    const updatedService = await Service.findByIdAndUpdate(
-      req.params.id,
-      updateData,
-      { new: true, runValidators: true }
-    );
-
-    if (!updatedService) {
+    if (!service) {
       return res.status(404).json({ success: false, message: 'Service not found' });
     }
 
-    res.status(200).json({ success: true, data: updatedService });
+    // if new image uploaded
+    if (req.file) {
+      // Delete old image from Cloudinary if it exists
+      if (service.image && service.image.includes("cloudinary")) {
+        const publicId = service.image.split("/").slice(-2).join("/").split(".")[0];
+        await cloudinary.uploader.destroy(publicId);
+      }
+
+      // Upload new image to Cloudinary
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: "services",
+      });
+
+      service.image = result.secure_url;
+
+      // Remove local file after upload
+      fs.unlinkSync(req.file.path);
+    }
+
+    service.title = title || service.title;
+    service.description = description || service.description;
+
+    await service.save();
+
+    res.status(200).json({ success: true, data: service });
 
   } catch (err) {
     res.status(400).json({ success: false, message: err.message });
@@ -82,10 +102,20 @@ exports.updateService = async (req, res) => {
 // DELETE Service
 exports.deleteService = async (req, res) => {
   try {
-    const deletedService = await Service.findByIdAndDelete(req.params.id);
-    if (!deletedService) {
+    const service = await Service.findById(req.params.id);
+
+    if (!service) {
       return res.status(404).json({ success: false, message: 'Service not found' });
     }
+
+    // Delete image from Cloudinary if it exists
+    if (service.image && service.image.includes("cloudinary")) {
+      const publicId = service.image.split("/").slice(-2).join("/").split(".")[0];
+      await cloudinary.uploader.destroy(publicId);
+    }
+
+    await service.deleteOne();
+
     res.status(200).json({ success: true, message: 'Service deleted successfully' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

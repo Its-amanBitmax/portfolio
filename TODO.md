@@ -1,7 +1,10 @@
-# TODO: Implement Separate Upload Folders for Images
-
-- [x] Modify src/middleware/upload.js to export separate upload middlewares: uploadAbout, uploadService, uploadBanner with respective destinations.
-- [x] Update src/routes/aboutRoutes.js to use uploadAbout.single('image').
-- [ ] Update src/routes/serviceRoutes.js to use uploadService.single('image').
-- [ ] Update src/routes/bannerRoutes.js to use uploadBanner.single('image').
-- [ ] Test image uploads to verify correct folder placement.
+- [x] Integrate Cloudinary in serviceController.js
+  - [x] Add imports for cloudinary and fs
+  - [x] Update createService to upload to Cloudinary folder "services"
+  - [x] Update updateService to handle old image deletion and new upload
+  - [x] Update deleteService to delete image from Cloudinary
+- [x] Integrate Cloudinary in bannerController.js
+  - [x] Add imports for cloudinary and fs
+  - [x] Update createBanner to upload to Cloudinary folder "banners"
+  - [x] Update updateBanner to handle old image deletion and new upload
+  - [x] Update deleteBanner to delete image from Cloudinary
